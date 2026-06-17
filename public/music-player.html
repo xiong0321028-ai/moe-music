@@ -336,6 +336,10 @@ var API = '';
 var LS_KEY = 'moe_music_data';
 var HOT_TAGS = ['周杰伦','林俊杰','邓紫棋','陈奕迅','Taylor Swift','周深','李荣浩','薛之谦'];
 
+function toHttps(u) {
+  return u && u.indexOf('http://') === 0 ? u.replace('http://', 'https://') : u;
+}
+
 var playlist = [];
 var currentIndex = -1;
 var isPlaying = false;
@@ -515,7 +519,7 @@ function search() {
           id: s.id,
           title: s.name,
           author: artists.map(function(a) { return a.name; }).join(' / ') || '未知',
-          pic: (s.al || s.album || {}).picUrl || '',
+          pic: toHttps((s.al || s.album || {}).picUrl || ''),
           dt: s.duration || s.dt || 0,
         };
       });
@@ -544,7 +548,7 @@ function renderPlaylist() {
     var s = playlist[i];
     var active = i === currentIndex ? ' active' : '';
     html += '<li class="song-item' + active + '" onclick="playSong(' + i + ')">' +
-      '<img class="thumb" src="' + (s.pic || '') + '?param=60y60" alt="" onerror="this.style.display=\'none\'">' +
+      '<img class="thumb" src="' + toHttps(s.pic || '') + '?param=60y60" alt="" onerror="this.style.display=\'none\'">' +
       '<div class="song-info"><div class="name">' + s.title + '</div><div class="artist">' + s.author + '</div></div>' +
       (s.dt ? '<span class="duration">' + formatTime(s.dt / 1000) + '</span>' : '') + '</li>';
   }
@@ -561,7 +565,7 @@ function playSong(index) {
   document.getElementById('lyricsBox').innerHTML = '';
   var art = document.getElementById('albumArt');
   if (song.pic) {
-    art.src = song.pic + '?param=300y300';
+    art.src = toHttps(song.pic) + '?param=300y300';
     art.onerror = function() { art.src = 'data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%27220%27 height=%27220%27%3E%3Crect fill=%27%23ffe4ec%27 width=%27220%27 height=%27220%27/%3E%3C/svg%3E'; };
   } else {
     art.src = 'data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%27220%27 height=%27220%27%3E%3Crect fill=%27%23ffe4ec%27 width=%27220%27 height=%27220%27/%3E%3C/svg%3E';
