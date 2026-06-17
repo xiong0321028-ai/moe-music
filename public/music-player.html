@@ -321,6 +321,7 @@ body {
         <button onclick="prevSong()" title="上一首">⏮</button>
         <button class="play-btn" id="playBtn" onclick="togglePlay()">▶</button>
         <button onclick="nextSong()" title="下一首">⏭</button>
+        <button onclick="downloadSong()" title="下载歌曲" style="font-size:18px">⬇</button>
       </div>
       <div class="volume-area">
         <button class="vol-btn" id="muteBtn" onclick="toggleMute()" title="静音">🔊</button>
@@ -662,6 +663,31 @@ function togglePlay() {
   if (!audio.src) return;
   if (audio.paused) { audio.play(); }
   else { audio.pause(); }
+}
+
+function downloadSong() {
+  var idx = currentIndex;
+  if (idx < 0 || !playlist[idx]) { showErr('没有可下载的歌曲'); return; }
+  var url = audio.src;
+  if (!url) { showErr('歌曲链接未就绪'); return; }
+  var song = playlist[idx];
+  var name = song.title + ' - ' + song.author;
+  showErr('正在获取文件...');
+  fetch(url).then(function(r) {
+    if (!r.ok) throw new Error();
+    return r.blob();
+  }).then(function(b) {
+    var ext = b.type.includes('flac') ? '.flac' : '.mp3';
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(b);
+    a.download = name + ext;
+    a.click();
+    URL.revokeObjectURL(a.href);
+    showErr('下载完成: ' + name);
+  }).catch(function() {
+    window.open(url, '_blank');
+    showErr('已在新窗口打开，右键另存为');
+  });
 }
 
 function updatePlayBtn() {
