@@ -20,23 +20,15 @@ if (musicU) {
   console.warn('[Config] WARNING: No MUSIC_U found. VIP songs will be 30s previews.');
 }
 
-// Copy music-player.html and images to API's public folder
-var apiPublic = path.join(__dirname, 'node_modules', 'NeteaseCloudMusicApi', 'public');
+// Copy music-player.html to API's public folder
 try {
-  fs.copyFileSync(path.join(__dirname, 'public', 'music-player.html'), path.join(apiPublic, 'music-player.html'));
+  fs.copyFileSync(
+    path.join(__dirname, 'public', 'music-player.html'),
+    path.join(__dirname, 'node_modules', 'NeteaseCloudMusicApi', 'public', 'music-player.html')
+  );
   console.log('[Static] music-player.html copied');
-  // Copy images
-  var imgDir = path.join(__dirname, 'public', 'images');
-  if (fs.existsSync(imgDir)) {
-    var apiImgDir = path.join(apiPublic, 'images');
-    if (!fs.existsSync(apiImgDir)) fs.mkdirSync(apiImgDir);
-    fs.readdirSync(imgDir).forEach(function(f) {
-      fs.copyFileSync(path.join(imgDir, f), path.join(apiImgDir, f));
-    });
-    console.log('[Static] images copied');
-  }
 } catch(e) {
-  // in Docker, these files might already be there or be handled differently
+  // in Docker, the file might already be there
 }
 
 // === Step 1: Patch request.js BEFORE it's loaded ===

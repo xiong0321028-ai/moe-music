@@ -220,38 +220,6 @@ body {
 .lyric-line.active { color: #ff6b9d; font-weight: 700; font-size: 14px; }
 .lyric-line.prev { color: #d4b0cc; font-size: 12px; }
 .lyric-line.next { color: #d4c0d0; font-size: 12px; }
-.char-left, .char-right {
-  position: fixed; bottom: 0; z-index: 1;
-  pointer-events: none; user-select: none;
-  display: flex; align-items: flex-end;
-}
-.char-left { left: 0; justify-content: flex-start; }
-.char-right { right: 0; justify-content: flex-end; }
-.char-inner {
-  position: relative; display: flex; align-items: flex-end;
-}
-.char-inner img {
-  display: block; height: 82vh; max-height: 540px; width: auto;
-  object-fit: contain; object-position: bottom;
-  filter: grayscale(1) brightness(1.15) contrast(1.6);
-  opacity: 0.3;
-}
-.char-inner::after {
-  content: ''; position: absolute; bottom: 0; left: 0; right: 0;
-  top: 0;
-  background: linear-gradient(135deg, rgba(255,140,171,0.25), rgba(212,165,255,0.25));
-  mix-blend-mode: multiply;
-  pointer-events: none;
-}
-.char-inner::after {
-  content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 30%;
-  background: linear-gradient(to top, rgba(255,255,255,0.5) 0%, transparent 100%);
-  pointer-events: none;
-}
-@media (max-width: 1100px) { .char-left, .char-right { opacity: 0.35; } }
-@media (max-width: 860px) { .char-left, .char-right { display: none; } }
-@media (max-width: 1100px) { .char-left, .char-right { opacity: 0.4; } }
-@media (max-width: 860px) { .char-left, .char-right { display: none; } }
 .loading { text-align: center; color: #c9a0d4; padding: 40px; font-size: 14px; }
 .error { text-align: center; color: #ff6b9d; padding: 20px; font-size: 13px; word-break: break-all; }
 .no-result { text-align: center; color: #d4b0cc; padding: 40px; font-size: 14px; }
@@ -301,17 +269,6 @@ body {
 <body>
 
 <div id="sakura-container"></div>
-
-<div class="char-left">
-  <div class="char-inner">
-    <img src="images/20170731181924_KnmCA.jpeg" alt="">
-  </div>
-</div>
-<div class="char-right">
-  <div class="char-inner">
-    <img src="images/v2-037266a14088199ea7522845cac6552b_1440w.jpg" alt="">
-  </div>
-</div>
 
 <div class="container">
   <div class="header">
