@@ -2,7 +2,7 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>🌸 萌音播放器</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -10,7 +10,7 @@
 <style>
 * { margin: 0; padding: 0; box-sizing: border-box; }
 body {
-  font-family: "Zen Maru Gothic", "Microsoft YaHei", sans-serif;
+  font-family: "Zen Maru Gothic","Microsoft YaHei",sans-serif;
   min-height: 100vh;
   background: linear-gradient(135deg, #ffe4ec 0%, #f8e8ff 40%, #e8f4ff 100%);
   color: #555; overflow-x: hidden; position: relative;
@@ -101,6 +101,7 @@ body {
 .song-info { flex: 1; min-width: 0; }
 .song-info .name { font-size: 13px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .song-info .artist { font-size: 11px; color: #c9a0d4; margin-top: 2px; }
+.song-info .duration { font-size: 10px; color: #d4b0cc; margin-left: auto; flex-shrink: 0; }
 .suggestion-item {
   display: flex; align-items: center; gap: 8px; padding: 8px 12px;
   border-radius: 10px; cursor: pointer; transition: background .2s;
@@ -143,6 +144,25 @@ body {
 }
 .album-wrap.playing::after { animation-play-state: running; }
 @keyframes bounce { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }
+.equalizer {
+  display: flex; align-items: flex-end; gap: 3px; height: 20px; margin-bottom: 8px;
+}
+.eq-bar {
+  width: 4px; border-radius: 4px; background: linear-gradient(to top, #ff8cab, #d4a5ff);
+  animation: eq-anim 0.6s ease-in-out infinite alternate; height: 4px;
+}
+.eq-bar:nth-child(1) { animation-delay: 0s; height: 6px; }
+.eq-bar:nth-child(2) { animation-delay: 0.1s; }
+.eq-bar:nth-child(3) { animation-delay: 0.2s; }
+.eq-bar:nth-child(4) { animation-delay: 0.15s; }
+.eq-bar:nth-child(5) { animation-delay: 0.05s; }
+.eq-bar:nth-child(6) { animation-delay: 0.25s; height: 8px; }
+.eq-bar:nth-child(7) { animation-delay: 0.3s; }
+@keyframes eq-anim {
+  0% { height: 4px; }
+  100% { height: 18px; }
+}
+.equalizer.paused .eq-bar { animation-play-state: paused; height: 4px !important; }
 .now-info { text-align: center; margin-bottom: 16px; width: 100%; }
 .now-info h2 { font-size: 1.15em; font-weight: 700; color: #666; margin-bottom: 4px; }
 .now-info p { color: #c9a0d4; font-size: 13px; }
@@ -175,8 +195,11 @@ body {
   box-shadow: 0 4px 18px rgba(255,140,171,.3);
 }
 .controls .play-btn:hover { transform: scale(1.08); box-shadow: 0 6px 25px rgba(255,140,171,.4); }
-.volume-area { display: flex; align-items: center; gap: 8px; width: 100%; max-width: 180px; }
-.volume-area span { font-size: 14px; }
+.volume-area { display: flex; align-items: center; gap: 8px; width: 100%; max-width: 200px; }
+.volume-area .vol-btn {
+  background: none; border: none; cursor: pointer; font-size: 16px; line-height: 1; padding: 0; color: #c9a0d4; transition: color .2s;
+}
+.volume-area .vol-btn:hover { color: #ff8cab; }
 .volume-area input[type="range"] {
   flex: 1; height: 4px; -webkit-appearance: none; appearance: none;
   background: rgba(255,140,171,.2); border-radius: 4px; outline: none;
@@ -187,14 +210,60 @@ body {
   box-shadow: 0 2px 8px rgba(255,140,171,.3);
 }
 .lyrics-box {
-  width: 100%; margin-top: 10px; text-align: center;
-  font-size: 13px; color: #c9a0d4; min-height: 22px; padding: 0 10px; max-height: 80px; overflow-y: auto;
+  width: 100%; margin-top: 12px; text-align: center;
+  font-size: 13px; color: #c9a0d4; min-height: 22px; padding: 0 10px;
+  max-height: 90px; overflow-y: auto; scroll-behavior: smooth;
 }
-.lyrics-box .lyric-line { transition: all .3s; line-height: 1.8; }
-.lyrics-box .lyric-line.active { color: #ff6b9d; font-weight: 700; font-size: 14px; }
+.lyrics-box::-webkit-scrollbar { width: 3px; }
+.lyrics-box::-webkit-scrollbar-thumb { background: #ffd4e0; border-radius: 4px; }
+.lyric-line { transition: all .3s; line-height: 1.8; }
+.lyric-line.active { color: #ff6b9d; font-weight: 700; font-size: 14px; }
+.lyric-line.prev { color: #d4b0cc; font-size: 12px; }
+.lyric-line.next { color: #d4c0d0; font-size: 12px; }
 .loading { text-align: center; color: #c9a0d4; padding: 40px; font-size: 14px; }
 .error { text-align: center; color: #ff6b9d; padding: 20px; font-size: 13px; word-break: break-all; }
 .no-result { text-align: center; color: #d4b0cc; padding: 40px; font-size: 14px; }
+.skeleton {
+  padding: 9px 12px; display: flex; align-items: center; gap: 10px;
+}
+.skeleton .sk-thumb {
+  width: 42px; height: 42px; border-radius: 10px;
+  background: linear-gradient(90deg, rgba(255,140,171,.08), rgba(212,165,255,.12), rgba(255,140,171,.08));
+  background-size: 200% 100%; animation: shimmer 1.5s infinite;
+}
+.skeleton .sk-lines { flex: 1; display: flex; flex-direction: column; gap: 6px; }
+.skeleton .sk-line {
+  height: 10px; border-radius: 10px;
+  background: linear-gradient(90deg, rgba(255,140,171,.08), rgba(212,165,255,.12), rgba(255,140,171,.08));
+  background-size: 200% 100%; animation: shimmer 1.5s infinite;
+}
+.skeleton .sk-line:first-child { width: 60%; }
+.skeleton .sk-line:last-child { width: 35%; }
+@keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+@media (max-width: 700px) {
+  .container { padding: 12px; }
+  .header h1 { font-size: 1.6em; }
+  .search-box input { max-width: 100%; width: 100%; font-size: 14px; }
+  .search-box button { font-size: 14px; padding: 12px 24px; }
+  .main { flex-direction: column-reverse; }
+  .sidebar { max-height: 300px; min-width: 0; }
+  .now-playing { min-width: 0; padding: 20px 16px; }
+  .album-art { width: 150px; height: 150px; }
+  .album-wrap::after { font-size: 16px; }
+  .controls { gap: 14px; }
+  .controls button { font-size: 18px; }
+  .controls .play-btn { width: 46px; height: 46px; font-size: 18px; }
+  .mode-btn { font-size: 11px; padding: 4px 12px; }
+  .lyrics-box { max-height: 70px; font-size: 12px; }
+}
+@media (max-width: 400px) {
+  .album-art { width: 120px; height: 120px; }
+  .sidebar { max-height: 220px; }
+  .controls { gap: 10px; }
+  .controls .play-btn { width: 40px; height: 40px; font-size: 15px; }
+  .now-playing { padding: 14px 12px; }
+  .lyrics-box { max-height: 60px; }
+}
 </style>
 </head>
 <body>
@@ -207,7 +276,7 @@ body {
     <p>🌸 用音乐治愈每一天</p>
     <div class="search-wrap">
       <div class="search-box">
-        <input type="text" id="searchInput" placeholder="搜索歌手或歌曲..." autocomplete="off">
+        <input type="text" id="searchInput" placeholder="搜索歌手或歌曲..." autocomplete="off" autofocus>
         <button id="searchBtn" onclick="search()">🔍 搜索</button>
       </div>
       <span id="errDetail"></span>
@@ -231,6 +300,10 @@ body {
       <div class="album-wrap" id="albumWrap">
         <img class="album-art" id="albumArt" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Crect fill='%23ffe4ec' width='220' height='220'/%3E%3Ctext x='110' y='118' text-anchor='middle' fill='%23d4a5ff' font-size='13'%3E🌸%3C/text%3E%3C/svg%3E" alt="封面">
       </div>
+      <div class="equalizer" id="equalizer">
+        <div class="eq-bar"></div><div class="eq-bar"></div><div class="eq-bar"></div>
+        <div class="eq-bar"></div><div class="eq-bar"></div><div class="eq-bar"></div><div class="eq-bar"></div>
+      </div>
       <div class="now-info">
         <h2 id="songTitle">未选择歌曲</h2>
         <p id="songArtist">等待播放</p>
@@ -250,7 +323,7 @@ body {
         <button onclick="nextSong()" title="下一首">⏭</button>
       </div>
       <div class="volume-area">
-        <span>🔊</span>
+        <button class="vol-btn" id="muteBtn" onclick="toggleMute()" title="静音">🔊</button>
         <input type="range" id="volumeSlider" min="0" max="1" step="0.05" value="0.7" oninput="setVolume(this.value)">
       </div>
       <div class="lyrics-box" id="lyricsBox"></div>
@@ -259,16 +332,19 @@ body {
 </div>
 
 <script>
-const API = '';
-const LS_KEY = 'moe_music_history';
-const HOT_TAGS = ['周杰伦', '林俊杰', '邓紫棋', '陈奕迅', 'Taylor Swift', '周深', '李荣浩', '薛之谦'];
+var API = '';
+var LS_KEY = 'moe_music_data';
+var HOT_TAGS = ['周杰伦','林俊杰','邓紫棋','陈奕迅','Taylor Swift','周深','李荣浩','薛之谦'];
 
-let playlist = [];
-let currentIndex = -1;
-let isPlaying = false;
-let playMode = 'list';
-let searching = false;
-const audio = new Audio();
+var playlist = [];
+var currentIndex = -1;
+var isPlaying = false;
+var playMode = 'list';
+var searching = false;
+var muted = false;
+var prevVolume = 0.7;
+var eqEl = null;
+var audio = new Audio();
 audio.volume = 0.7;
 
 (function() {
@@ -284,21 +360,43 @@ audio.volume = 0.7;
     p.style.opacity = 0.3 + Math.random() * 0.4;
     c.appendChild(p);
   }
+  eqEl = document.getElementById('equalizer');
 })();
 
+function getSaved() {
+  try { return JSON.parse(localStorage.getItem(LS_KEY)); } catch(e) { return null; }
+}
+function saveState() {
+  try {
+    localStorage.setItem(LS_KEY, JSON.stringify({
+      playlist: playlist.slice(0, 50),
+      currentIndex: currentIndex,
+      playMode: playMode,
+      volume: audio.volume,
+      ts: Date.now()
+    }));
+  } catch(e) {}
+}
 function getHistory() {
-  try { return JSON.parse(localStorage.getItem(LS_KEY)) || []; } catch (e) { return []; }
+  try { var d = JSON.parse(localStorage.getItem(LS_KEY)); return d && d.history ? d.history : []; } catch(e) { return []; }
 }
-
 function saveHistory(kw) {
-  var h = getHistory().filter(function(s) { return s !== kw; });
-  h.unshift(kw);
-  if (h.length > 10) h = h.slice(0, 10);
-  localStorage.setItem(LS_KEY, JSON.stringify(h));
+  try {
+    var d = JSON.parse(localStorage.getItem(LS_KEY)) || {};
+    var h = d.history || [];
+    h = h.filter(function(s) { return s !== kw; });
+    h.unshift(kw);
+    if (h.length > 10) h = h.slice(0, 10);
+    d.history = h;
+    localStorage.setItem(LS_KEY, JSON.stringify(d));
+  } catch(e) {}
 }
-
 function clearHistory() {
-  localStorage.removeItem(LS_KEY);
+  try {
+    var d = JSON.parse(localStorage.getItem(LS_KEY)) || {};
+    d.history = [];
+    localStorage.setItem(LS_KEY, JSON.stringify(d));
+  } catch(e) {}
   showSuggestions();
 }
 
@@ -366,11 +464,23 @@ audio.addEventListener('waiting', function() {
   var t = setTimeout(function() { showErr('加载超时，请检查网络'); }, 8000);
   audio.addEventListener('canplay', function() { clearTimeout(t); }, { once: true });
 });
+audio.addEventListener('play', function() {
+  isPlaying = true;
+  updatePlayBtn();
+  if (eqEl) eqEl.classList.remove('paused');
+});
+audio.addEventListener('pause', function() {
+  isPlaying = false;
+  updatePlayBtn();
+  if (eqEl) eqEl.classList.add('paused');
+});
 document.addEventListener('keydown', function(e) {
   if (e.target.tagName === 'INPUT') return;
   if (e.code === 'Space') { e.preventDefault(); togglePlay(); }
   if (e.code === 'ArrowRight') { if (audio.duration) audio.currentTime = Math.min(audio.currentTime + 5, audio.duration); }
   if (e.code === 'ArrowLeft') { audio.currentTime = Math.max(audio.currentTime - 5, 0); }
+  if (e.code === 'ArrowUp') { setVolume(Math.min(1, audio.volume + 0.1)); }
+  if (e.code === 'ArrowDown') { setVolume(Math.max(0, audio.volume - 0.1)); }
 });
 
 function api(path) {
@@ -387,7 +497,10 @@ function search() {
   saveHistory(kw);
   var list = document.getElementById('songList');
   document.getElementById('resultCount').textContent = '';
-  list.innerHTML = '<li class="loading">搜索中...</li>';
+  list.innerHTML = '';
+  for (var sk = 0; sk < 5; sk++) {
+    list.innerHTML += '<li class="skeleton"><div class="sk-thumb"></div><div class="sk-lines"><div class="sk-line"></div><div class="sk-line"></div></div></li>';
+  }
   api('/search?keywords=' + encodeURIComponent(kw))
     .then(function(data) {
       var songs = data.result && data.result.songs;
@@ -397,11 +510,12 @@ function search() {
       }
       document.getElementById('listTitle').textContent = '搜索结果';
       playlist = songs.map(function(s) {
+        var artists = s.artists || s.ar || [];
         return {
           id: s.id,
           title: s.name,
-          author: s.artists ? s.artists.map(function(a) { return a.name; }).join(' / ') : '未知',
-          pic: s.al ? s.al.picUrl : '',
+          author: artists.map(function(a) { return a.name; }).join(' / ') || '未知',
+          pic: (s.al || s.album || {}).picUrl || '',
           dt: s.duration || s.dt || 0,
         };
       });
@@ -410,6 +524,7 @@ function search() {
       var sb = document.querySelector('.sidebar');
       if (sb) sb.scrollTop = 0;
       if (playlist.length > 0) playSong(0);
+      saveState();
     })
     .catch(function(e) {
       if (e.name === 'TimeoutError') list.innerHTML = '<li class="error">请求超时，请检查网络</li>';
@@ -429,8 +544,9 @@ function renderPlaylist() {
     var s = playlist[i];
     var active = i === currentIndex ? ' active' : '';
     html += '<li class="song-item' + active + '" onclick="playSong(' + i + ')">' +
-      '<img class="thumb" src="' + (s.pic || '') + '?param=60y60" alt="" onerror="this.src=\'data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%2742%27 height=%2742%27%3E%3Crect fill=%27%23ffe4ec%27 width=%2742%27 height=%2742%27/%3E%3Ctext x=%2721%27 y=%2728%27 text-anchor=%27middle%27 fill=%27%23d4a5ff%27 font-size=%2716%27%3E🎵%3C/text%3E%3C/svg%3E\'">' +
-      '<div class="song-info"><div class="name">' + s.title + '</div><div class="artist">' + s.author + '</div></div></li>';
+      '<img class="thumb" src="' + (s.pic || '') + '?param=60y60" alt="" onerror="this.style.display=\'none\'">' +
+      '<div class="song-info"><div class="name">' + s.title + '</div><div class="artist">' + s.author + '</div></div>' +
+      (s.dt ? '<span class="duration">' + formatTime(s.dt / 1000) + '</span>' : '') + '</li>';
   }
   list.innerHTML = html;
 }
@@ -451,7 +567,6 @@ function playSong(index) {
     art.src = 'data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%27220%27 height=%27220%27%3E%3Crect fill=%27%23ffe4ec%27 width=%27220%27 height=%27220%27/%3E%3C/svg%3E';
   }
 
-  // Fetch song URL and lyrics in parallel
   Promise.all([
     api('/song/url?id=' + song.id).then(function(d) {
       var u = d.data && d.data[0] && d.data[0].url;
@@ -466,10 +581,7 @@ function playSong(index) {
     var lrcText = results[1];
     if (url) {
       audio.src = url;
-      audio.play().then(function() {
-        isPlaying = true;
-        updatePlayBtn();
-      }).catch(function(e) {
+      audio.play().catch(function(e) {
         isPlaying = false;
         updatePlayBtn();
         var msg = e && e.name === 'NotAllowedError' ? '请点击播放按钮手动播放' : ('无法播放: ' + (e && e.message || '未知错误'));
@@ -481,6 +593,7 @@ function playSong(index) {
     if (lrcText) {
       parseAndSetLyrics(lrcText);
     }
+    saveState();
   });
 }
 
@@ -493,7 +606,7 @@ function parseAndSetLyrics(lrcText) {
     var time = parseInt(m[1]) * 60 + parseFloat(m[2] + '.' + m[3].substring(0, 2));
     parsed.push({ time: time, text: m[4].trim() });
   }
-  if (parsed.length > 0) { audio._lyrics = parsed; audio._lyricIndex = -1; }
+  if (parsed.length > 0) { audio._lyrics = parsed; audio._lyricIndex = -2; }
 }
 
 function updateLyrics() {
@@ -506,28 +619,34 @@ function updateLyrics() {
   if (idx !== audio._lyricIndex) {
     audio._lyricIndex = idx;
     var box = document.getElementById('lyricsBox');
-    if (idx === -1) { box.innerHTML = ''; return; }
-    var start = Math.max(0, idx - 1);
-    var displayLines = lrc.slice(start, idx + 3);
+    if (idx === -1) { box.innerHTML = '<div class="lyric-line">♪</div>'; return; }
+    var start = Math.max(0, idx - 2);
+    var end = Math.min(lrc.length - 1, idx + 3);
     var h = '';
-    for (var j = 0; j < displayLines.length; j++) {
-      h += '<div class="lyric-line' + (j === idx - start ? ' active' : '') + '">' + (displayLines[j].text || '♪') + '</div>';
+    for (var j = start; j <= end; j++) {
+      var cls = 'lyric-line';
+      if (j < idx) cls += ' prev';
+      else if (j === idx) cls += ' active';
+      else cls += ' next';
+      h += '<div class="' + cls + '">' + (lrc[j].text || '♪') + '</div>';
     }
     box.innerHTML = h;
+    var activeEl = box.querySelector('.lyric-line.active');
+    if (activeEl) activeEl.scrollIntoView({ block: 'center', behavior: 'smooth' });
   }
 }
 
 function togglePlay() {
   if (!audio.src) return;
-  if (audio.paused) { audio.play(); isPlaying = true; }
-  else { audio.pause(); isPlaying = false; }
-  updatePlayBtn();
+  if (audio.paused) { audio.play(); }
+  else { audio.pause(); }
 }
 
 function updatePlayBtn() {
   document.getElementById('playBtn').textContent = isPlaying ? '⏸' : '▶';
   document.getElementById('albumArt').classList.toggle('playing', isPlaying);
   document.getElementById('albumWrap').classList.toggle('playing', isPlaying);
+  if (eqEl) eqEl.classList.toggle('paused', !isPlaying);
 }
 
 function nextSong() {
@@ -543,6 +662,7 @@ function nextSong() {
 
 function prevSong() {
   if (playlist.length === 0) return;
+  if (audio.currentTime > 3) { audio.currentTime = 0; return; }
   if (playMode === 'random') {
     var idx;
     do { idx = Math.floor(Math.random() * playlist.length); } while (idx === currentIndex && playlist.length > 1);
@@ -563,6 +683,7 @@ function setPlayMode(mode) {
   for (var i = 0; i < btns.length; i++) {
     btns[i].classList.toggle('active', btns[i].dataset.mode === mode);
   }
+  saveState();
 }
 
 function updateProgress() {
@@ -580,7 +701,26 @@ function seek(e) {
   if (audio.duration) audio.currentTime = pct * audio.duration;
 }
 
-function setVolume(v) { audio.volume = parseFloat(v); }
+function setVolume(v) {
+  if (typeof v === 'string') v = parseFloat(v);
+  audio.volume = v;
+  muted = v === 0;
+  document.getElementById('volumeSlider').value = v;
+  document.getElementById('muteBtn').textContent = v === 0 ? '🔇' : v < 0.5 ? '🔉' : '🔊';
+  if (v > 0) prevVolume = v;
+  saveState();
+}
+
+function toggleMute() {
+  if (muted) {
+    setVolume(prevVolume || 0.7);
+    muted = false;
+  } else {
+    prevVolume = audio.volume || 0.7;
+    setVolume(0);
+    muted = true;
+  }
+}
 
 function formatTime(s) {
   if (!s || isNaN(s)) return '00:00';
@@ -589,7 +729,29 @@ function formatTime(s) {
   return (m < 10 ? '0' : '') + m + ':' + (sec < 10 ? '0' : '') + sec;
 }
 
-showSuggestions();
+// Restore saved state
+(function() {
+  var saved = getSaved();
+  if (saved && saved.playlist && saved.playlist.length > 0 && Date.now() - saved.ts < 86400000) {
+    var modeBtns = document.querySelectorAll('.mode-btn');
+    for (var i = 0; i < modeBtns.length; i++) {
+      modeBtns[i].classList.toggle('active', modeBtns[i].dataset.mode === (saved.playMode || 'list'));
+    }
+    playMode = saved.playMode || 'list';
+    playlist = saved.playlist;
+    if (saved.volume !== undefined) {
+      setVolume(saved.volume);
+    }
+    document.getElementById('listTitle').textContent = '上次播放';
+    document.getElementById('resultCount').textContent = '共 ' + playlist.length + ' 首';
+    renderPlaylist();
+    if (saved.currentIndex >= 0 && saved.currentIndex < playlist.length) {
+      playSong(saved.currentIndex);
+    }
+    return;
+  }
+  showSuggestions();
+})();
 </script>
 </body>
 </html>
