@@ -1,0 +1,10 @@
+services:
+  - type: web
+    name: moe-music-player
+    env: docker
+    region: singapore
+    plan: free
+    dockerfilePath: ./Dockerfile
+    envVars:
+      - key: MUSIC_U
+        sync: false

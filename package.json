@@ -1,0 +1,8 @@
+{
+  "name": "netease-server",
+  "version": "1.0.0",
+  "private": true,
+  "dependencies": {
+    "NeteaseCloudMusicApi": "^4.32.0"
+  }
+}
