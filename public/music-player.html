@@ -223,11 +223,25 @@ body {
 .char-left, .char-right {
   position: fixed; bottom: 0; z-index: 1;
   pointer-events: none; user-select: none;
+  display: flex; align-items: flex-end;
 }
-.char-left { left: -30px; }
-.char-right { right: -30px; }
-.char-left svg, .char-right svg { display: block; height: 80vh; max-height: 520px; width: auto; }
-@media (max-width: 1100px) { .char-left, .char-right { opacity: .4; } }
+.char-left { left: 0; justify-content: flex-start; }
+.char-right { right: 0; justify-content: flex-end; }
+.char-inner {
+  position: relative; display: flex; align-items: flex-end;
+}
+.char-inner img {
+  display: block; height: 82vh; max-height: 540px; width: auto;
+  filter: url(#lineart); opacity: 0.5; object-fit: contain; object-position: bottom;
+}
+.char-inner::after {
+  content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 30%;
+  background: linear-gradient(to top, rgba(255,255,255,0.5) 0%, transparent 100%);
+  pointer-events: none;
+}
+@media (max-width: 1100px) { .char-left, .char-right { opacity: 0.35; } }
+@media (max-width: 860px) { .char-left, .char-right { display: none; } }
+@media (max-width: 1100px) { .char-left, .char-right { opacity: 0.4; } }
 @media (max-width: 860px) { .char-left, .char-right { display: none; } }
 .loading { text-align: center; color: #c9a0d4; padding: 40px; font-size: 14px; }
 .error { text-align: center; color: #ff6b9d; padding: 20px; font-size: 13px; word-break: break-all; }
@@ -279,70 +293,31 @@ body {
 
 <div id="sakura-container"></div>
 
-<div class="char-left">
-<svg viewBox="0 0 220 440" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <defs>
-    <linearGradient id="cg1" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%" stop-color="#ff8cab"/>
-      <stop offset="100%" stop-color="#d4a5ff"/>
-    </linearGradient>
-    <linearGradient id="cg2" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0%" stop-color="#ffb7c5"/>
-      <stop offset="100%" stop-color="#e8b5ff"/>
-    </linearGradient>
-  </defs>
-  <g opacity="0.3">
-    <path d="M120 30 Q160 40 178 100 Q190 170 175 280 L158 400 Q140 415 110 415 Q75 415 55 395 L42 280 Q28 170 40 100 Q58 40 100 30 Z" fill="url(#cg1)"/>
-    <path d="M175 120 Q210 200 205 310 Q198 380 175 420" stroke="url(#cg1)" stroke-width="10" stroke-linecap="round" opacity="0.6"/>
-    <path d="M50 90 Q25 150 22 230 Q20 290 30 350" stroke="url(#cg1)" stroke-width="7" stroke-linecap="round" opacity="0.4"/>
-    <ellipse cx="110" cy="100" rx="35" ry="30" fill="rgba(255,255,255,0.06)"/>
-    <path d="M78 92 Q90 60 115 55 Q140 60 148 92 Q145 72 128 65 Q115 60 100 65 Q82 72 78 92" fill="url(#cg2)" opacity="0.6"/>
-    <path d="M80 95 Q70 130 72 180 Q72 220 80 260" stroke="url(#cg1)" stroke-width="6" stroke-linecap="round" opacity="0.3"/>
-    <ellipse cx="95" cy="110" rx="6" ry="3" fill="rgba(255,140,171,0.2)"/>
-    <ellipse cx="128" cy="110" rx="6" ry="3" fill="rgba(255,140,171,0.2)"/>
-    <path d="M95 100 Q100 104 105 100" stroke="rgba(255,255,255,0.2)" stroke-width="1.5" stroke-linecap="round"/>
-    <path d="M118 100 Q123 104 128 100" stroke="rgba(255,255,255,0.2)" stroke-width="1.5" stroke-linecap="round"/>
-    <path d="M108 118 Q112 121 116 118" stroke="rgba(255,255,255,0.12)" stroke-width="1" fill="none" stroke-linecap="round"/>
-    <path d="M82 200 Q110 160 140 200 L152 380 Q138 395 110 395 Q82 395 70 380 Z" fill="url(#cg1)" opacity="0.5"/>
-    <path d="M88 195 Q110 208 134 195 Q110 215 88 195" fill="rgba(255,255,255,0.07)"/>
-    <path d="M65 300 Q105 320 145 300 Q142 330 105 340 Q68 330 65 300" fill="url(#cg2)" opacity="0.3"/>
-    <path d="M140 220 Q172 200 182 175" stroke="url(#cg1)" stroke-width="5" stroke-linecap="round" opacity="0.35"/>
-    <circle cx="184" cy="170" r="4" fill="rgba(255,255,255,0.06)"/>
-    <path d="M82 230 Q62 260 58 300" stroke="url(#cg1)" stroke-width="5" stroke-linecap="round" opacity="0.3"/>
-    <ellipse cx="170" cy="115" rx="5" ry="5" fill="#ff8cab" opacity="0.4"/>
-    <path d="M168 108 L178 120 M168 122 L178 110" stroke="#ff8cab" stroke-width="1.5" opacity="0.3"/>
-  </g>
+<svg style="display:none" aria-hidden="true">
+  <filter id="lineart" color-interpolation-filters="sRGB">
+    <feColorMatrix type="saturate" values="0"/>
+    <feGaussianBlur stdDeviation="1.5" result="blur"/>
+    <feComposite in="SourceGraphic" in2="blur" operator="arithmetic" k1="0" k2="1" k3="-0.9" k4="0.05" result="edges"/>
+    <feComponentTransfer>
+      <feFuncA type="linear" slope="6" intercept="-2.5"/>
+    </feComponentTransfer>
+    <feColorMatrix type="matrix" values="
+      0 0 0 0 0.9
+      0 0 0 0 0.5
+      0 0 0 0 0.8
+      0 0 0 0.55 0"/>
+  </filter>
 </svg>
-</div>
 
+<div class="char-left">
+  <div class="char-inner">
+    <img src="images/20170731181924_KnmCA.jpeg" alt="">
+  </div>
+</div>
 <div class="char-right">
-<svg viewBox="0 0 220 440" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <defs>
-    <linearGradient id="cg3" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%" stop-color="#d4a5ff"/>
-      <stop offset="100%" stop-color="#87ceeb"/>
-    </linearGradient>
-  </defs>
-  <g opacity="0.3">
-    <path d="M100 35 Q130 35 145 60 Q158 85 158 105 Q158 125 150 135 L158 155 L170 380 Q155 395 120 395 Q85 395 65 380 L52 155 L50 135 Q42 125 42 105 Q42 60 70 35 Z" fill="url(#cg3)"/>
-    <path d="M60 80 Q30 100 22 150 Q18 190 25 240" stroke="url(#cg3)" stroke-width="8" stroke-linecap="round" opacity="0.6"/>
-    <path d="M160 80 Q190 100 198 150 Q202 190 195 240" stroke="url(#cg3)" stroke-width="8" stroke-linecap="round" opacity="0.6"/>
-    <ellipse cx="100" cy="105" rx="33" ry="30" fill="rgba(255,255,255,0.06)"/>
-    <path d="M68 95 Q82 68 105 62 Q128 68 140 95 Q135 75 120 68 Q105 63 88 68 Q72 75 68 95" fill="url(#cg3)" opacity="0.5"/>
-    <path d="M55 100 L65 105 L55 110" fill="none" stroke="rgba(255,255,255,0.15)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-    <path d="M145 100 L135 105 L145 110" fill="none" stroke="rgba(255,255,255,0.15)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-    <ellipse cx="80" cy="115" rx="6" ry="3" fill="rgba(212,165,255,0.2)"/>
-    <ellipse cx="120" cy="115" rx="6" ry="3" fill="rgba(212,165,255,0.2)"/>
-    <path d="M97 105 Q100 109 103 105" stroke="rgba(255,255,255,0.18)" stroke-width="1.2" stroke-linecap="round"/>
-    <path d="M90 112 Q100 116 110 112" stroke="rgba(255,255,255,0.1)" stroke-width="0.8" fill="none" stroke-linecap="round"/>
-    <path d="M76 185 Q100 150 126 185 L136 370 Q125 385 100 385 Q75 385 64 370 Z" fill="url(#cg3)" opacity="0.4"/>
-    <path d="M82 182 Q100 192 120 182 Q100 198 82 182" fill="rgba(255,255,255,0.06)"/>
-    <path d="M60 260 Q100 280 140 260 L150 290 Q100 310 50 290 Z" fill="url(#cg3)" opacity="0.2"/>
-    <path d="M130 200 Q105 230 90 260" stroke="url(#cg3)" stroke-width="4" stroke-linecap="round" opacity="0.3"/>
-    <path d="M76 215 Q55 245 48 280" stroke="url(#cg3)" stroke-width="4" stroke-linecap="round" opacity="0.25"/>
-    <circle cx="48" cy="283" r="3" fill="rgba(255,255,255,0.05)"/>
-  </g>
-</svg>
+  <div class="char-inner">
+    <img src="images/v2-037266a14088199ea7522845cac6552b_1440w.jpg" alt="">
+  </div>
 </div>
 
 <div class="container">
