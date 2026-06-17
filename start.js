@@ -20,6 +20,17 @@ if (musicU) {
   console.warn('[Config] WARNING: No MUSIC_U found. VIP songs will be 30s previews.');
 }
 
+// Copy music-player.html to API's public folder
+try {
+  fs.copyFileSync(
+    path.join(__dirname, 'public', 'music-player.html'),
+    path.join(__dirname, 'node_modules', 'NeteaseCloudMusicApi', 'public', 'music-player.html')
+  );
+  console.log('[Static] music-player.html copied');
+} catch(e) {
+  // in Docker, the file might already be there
+}
+
 // === Step 1: Patch request.js BEFORE it's loaded ===
 const requestPath = path.join(__dirname, 'node_modules', 'NeteaseCloudMusicApi', 'util', 'request.js');
 let code = fs.readFileSync(requestPath, 'utf-8');
