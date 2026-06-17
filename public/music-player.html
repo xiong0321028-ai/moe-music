@@ -73,6 +73,25 @@ body {
   backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,.6);
   box-shadow: 0 8px 32px rgba(212,165,255,.12);
 }
+.lyrics-panel {
+  flex: 0.8; min-width: 200px; max-width: 320px; max-height: 580px;
+  background: rgba(255,255,255,.55); border-radius: 20px; padding: 18px;
+  backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,.6);
+  box-shadow: 0 8px 32px rgba(212,165,255,.12); display: flex; flex-direction: column;
+}
+.lyrics-scroll {
+  flex: 1; overflow-y: auto; scroll-behavior: smooth; padding-right: 4px;
+}
+.lyrics-scroll::-webkit-scrollbar { width: 4px; }
+.lyrics-scroll::-webkit-scrollbar-thumb { background: #ffd4e0; border-radius: 4px; }
+.lyrics-line {
+  padding: 5px 8px; font-size: 13px; color: #c9a0d4; line-height: 1.7;
+  transition: all .35s; text-align: center; border-radius: 8px;
+}
+.lyrics-line.active { color: #ff6b9d; font-weight: 700; font-size: 15px; background: rgba(255,140,171,.08); }
+.lyrics-line.prev { color: #d4b0cc; font-size: 12px; }
+.lyrics-line.next { color: #d4c0d0; font-size: 12px; }
+.lyrics-placeholder { text-align: center; color: #d4b0cc; font-size: 13px; padding: 40px 0; }
 .sidebar::-webkit-scrollbar { width: 5px; }
 .sidebar::-webkit-scrollbar-track { background: transparent; }
 .sidebar::-webkit-scrollbar-thumb { background: #ffd4e0; border-radius: 10px; }
@@ -209,17 +228,7 @@ body {
   background: linear-gradient(135deg, #ff8cab, #d4a5ff); cursor: pointer;
   box-shadow: 0 2px 8px rgba(255,140,171,.3);
 }
-.lyrics-box {
-  width: 100%; margin-top: 12px; text-align: center;
-  font-size: 13px; color: #c9a0d4; min-height: 22px; padding: 0 10px;
-  max-height: 90px; overflow-y: auto; scroll-behavior: smooth;
-}
-.lyrics-box::-webkit-scrollbar { width: 3px; }
-.lyrics-box::-webkit-scrollbar-thumb { background: #ffd4e0; border-radius: 4px; }
-.lyric-line { transition: all .3s; line-height: 1.8; }
-.lyric-line.active { color: #ff6b9d; font-weight: 700; font-size: 14px; }
-.lyric-line.prev { color: #d4b0cc; font-size: 12px; }
-.lyric-line.next { color: #d4c0d0; font-size: 12px; }
+.lyrics-line.next { color: #d4c0d0; font-size: 12px; }
 .settings-btn {
   position: fixed; top: 18px; right: 20px; z-index: 10;
   width: 38px; height: 38px; border-radius: 50%; border: none;
@@ -297,13 +306,13 @@ body {
   .main { flex-direction: column-reverse; }
   .sidebar { max-height: 300px; min-width: 0; }
   .now-playing { min-width: 0; padding: 20px 16px; }
+  .lyrics-panel { max-height: 250px; max-width: none; min-width: 0; }
   .album-art { width: 150px; height: 150px; }
   .album-wrap::after { font-size: 16px; }
   .controls { gap: 14px; }
   .controls button { font-size: 18px; }
   .controls .play-btn { width: 46px; height: 46px; font-size: 18px; }
   .mode-btn { font-size: 11px; padding: 4px 12px; }
-  .lyrics-box { max-height: 70px; font-size: 12px; }
 }
 @media (max-width: 400px) {
   .album-art { width: 120px; height: 120px; }
@@ -311,7 +320,6 @@ body {
   .controls { gap: 10px; }
   .controls .play-btn { width: 40px; height: 40px; font-size: 15px; }
   .now-playing { padding: 14px 12px; }
-  .lyrics-box { max-height: 60px; }
 }
 </style>
 </head>
@@ -392,7 +400,15 @@ body {
         <button class="vol-btn" id="muteBtn" onclick="toggleMute()" title="静音">🔊</button>
         <input type="range" id="volumeSlider" min="0" max="1" step="0.05" value="0.7" oninput="setVolume(this.value)">
       </div>
-      <div class="lyrics-box" id="lyricsBox"></div>
+    </div>
+    <div class="lyrics-panel" id="lyricsPanel">
+      <div class="sidebar-header">
+        <h2>📄 歌词</h2>
+        <span class="count" id="lyricCount"></span>
+      </div>
+      <div class="lyrics-scroll" id="lyricsScroll">
+        <div class="lyrics-placeholder">选择歌曲后将显示歌词</div>
+      </div>
     </div>
   </div>
 </div>
@@ -646,7 +662,7 @@ function playSong(index) {
   var song = playlist[index];
   document.getElementById('songTitle').textContent = song.title;
   document.getElementById('songArtist').textContent = song.author;
-  document.getElementById('lyricsBox').innerHTML = '';
+  document.getElementById('lyricsScroll').innerHTML = '<div class="lyrics-placeholder">暂无歌词</div>';
   var art = document.getElementById('albumArt');
   if (song.pic) {
     art.src = toHttps(song.pic) + '?param=300y300';
@@ -694,7 +710,22 @@ function parseAndSetLyrics(lrcText) {
     var time = parseInt(m[1]) * 60 + parseFloat(m[2] + '.' + m[3].substring(0, 2));
     parsed.push({ time: time, text: m[4].trim() });
   }
-  if (parsed.length > 0) { audio._lyrics = parsed; audio._lyricIndex = -2; }
+  if (parsed.length > 0) {
+    audio._lyrics = parsed;
+    audio._lyricIndex = -2;
+    // Render all lyrics lines into the panel
+    var scroll = document.getElementById('lyricsScroll');
+    var h = '';
+    for (var i = 0; i < parsed.length; i++) {
+      h += '<div class="lyrics-line" data-idx="' + i + '">' + (parsed[i].text || '♪') + '</div>';
+    }
+    scroll.innerHTML = h;
+    document.getElementById('lyricCount').textContent = parsed.length + ' 行';
+  } else {
+  document.getElementById('lyricsScroll').innerHTML = '<div class="lyrics-placeholder">加载歌词中...</div>';
+  document.getElementById('lyricCount').textContent = '';
+    document.getElementById('lyricCount').textContent = '';
+  }
 }
 
 function updateLyrics() {
@@ -706,21 +737,16 @@ function updateLyrics() {
   }
   if (idx !== audio._lyricIndex) {
     audio._lyricIndex = idx;
-    var box = document.getElementById('lyricsBox');
-    if (idx === -1) { box.innerHTML = '<div class="lyric-line">♪</div>'; return; }
-    var start = Math.max(0, idx - 2);
-    var end = Math.min(lrc.length - 1, idx + 3);
-    var h = '';
-    for (var j = start; j <= end; j++) {
-      var cls = 'lyric-line';
-      if (j < idx) cls += ' prev';
-      else if (j === idx) cls += ' active';
-      else cls += ' next';
-      h += '<div class="' + cls + '">' + (lrc[j].text || '♪') + '</div>';
+    var lines = document.querySelectorAll('#lyricsScroll .lyrics-line');
+    for (var j = 0; j < lines.length; j++) {
+      lines[j].className = 'lyrics-line';
+      if (j < idx) lines[j].classList.add('prev');
+      else if (j === idx) lines[j].classList.add('active');
+      else { lines[j].classList.add('next'); break; }
     }
-    box.innerHTML = h;
-    var activeEl = box.querySelector('.lyric-line.active');
-    if (activeEl) activeEl.scrollIntoView({ block: 'center', behavior: 'smooth' });
+    if (idx >= 0 && lines[idx]) {
+      lines[idx].scrollIntoView({ block: 'center', behavior: 'smooth' });
+    }
   }
 }
 
