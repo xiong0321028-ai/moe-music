@@ -523,6 +523,24 @@ function search() {
           dt: s.duration || s.dt || 0,
         };
       });
+      // Fetch album art for songs missing picUrl
+      var needPic = playlist.filter(function(s) { return !s.pic; }).map(function(s) { return s.id; });
+      if (needPic.length > 0) {
+        api('/song/detail?ids=' + needPic.join(',')).then(function(d) {
+          if (d.songs) {
+            var picMap = {};
+            d.songs.forEach(function(s) { if (s.al && s.al.picUrl) picMap[s.id] = toHttps(s.al.picUrl); });
+            for (var i = 0; i < playlist.length; i++) {
+              if (picMap[playlist[i].id]) playlist[i].pic = picMap[playlist[i].id];
+            }
+            renderPlaylist();
+            // Update current album art if needed
+            if (currentIndex >= 0 && picMap[playlist[currentIndex].id]) {
+              document.getElementById('albumArt').src = picMap[playlist[currentIndex].id] + '?param=300y300';
+            }
+          }
+        }).catch(function() {});
+      }
       document.getElementById('resultCount').textContent = '共 ' + playlist.length + ' 首';
       renderPlaylist();
       var sb = document.querySelector('.sidebar');
