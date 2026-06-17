@@ -220,6 +220,55 @@ body {
 .lyric-line.active { color: #ff6b9d; font-weight: 700; font-size: 14px; }
 .lyric-line.prev { color: #d4b0cc; font-size: 12px; }
 .lyric-line.next { color: #d4c0d0; font-size: 12px; }
+.settings-btn {
+  position: fixed; top: 18px; right: 20px; z-index: 10;
+  width: 38px; height: 38px; border-radius: 50%; border: none;
+  background: rgba(255,255,255,.5); backdrop-filter: blur(10px);
+  color: #c9a0d4; font-size: 18px; cursor: pointer;
+  transition: all .3s; line-height: 1;
+}
+.settings-btn:hover { background: rgba(255,255,255,.8); transform: rotate(30deg); color: #ff8cab; }
+.settings-panel {
+  display: none; position: fixed; top: 65px; right: 20px; z-index: 10;
+  width: 280px; background: rgba(255,255,255,.8); backdrop-filter: blur(25px);
+  border-radius: 20px; border: 1px solid rgba(255,255,255,.6);
+  box-shadow: 0 8px 32px rgba(212,165,255,.15); padding: 18px;
+}
+.settings-panel.open { display: block; }
+.settings-panel h3 { font-size: 13px; color: #c9a0d4; margin-bottom: 12px; text-align: center; }
+.settings-panel label {
+  display: block; font-size: 12px; color: #c9a0d4; margin-bottom: 4px;
+}
+.upload-area {
+  display: flex; gap: 8px; margin-bottom: 12px;
+}
+.upload-area input[type="file"] { display: none; }
+.upload-btn {
+  flex: 1; padding: 8px 12px; border-radius: 12px; border: 1.5px dashed #ffd4e0;
+  background: rgba(255,255,255,.4); color: #c9a0d4; font-size: 12px;
+  cursor: pointer; text-align: center; font-family: inherit; transition: all .3s;
+}
+.upload-btn:hover { border-color: #ff8cab; color: #ff8cab; background: rgba(255,140,171,.05); }
+.presets { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
+.preset-wrap { text-align: center; }
+.preset-swatch {
+  width: 44px; height: 44px; border-radius: 12px; cursor: pointer;
+  border: 2px solid transparent; transition: all .3s;
+}
+.preset-swatch:hover { transform: scale(1.1); }
+.preset-swatch.active { border-color: #ff8cab; box-shadow: 0 0 12px rgba(255,140,171,.3); }
+.settings-actions { display: flex; gap: 8px; }
+.settings-actions button {
+  flex: 1; padding: 8px; border-radius: 12px; border: none;
+  font-size: 12px; cursor: pointer; font-family: inherit; transition: all .3s;
+}
+.settings-actions .reset-btn { background: rgba(255,140,171,.1); color: #ff6b9d; }
+.settings-actions .reset-btn:hover { background: rgba(255,140,171,.2); }
+.settings-actions .close-btn { background: rgba(212,165,255,.1); color: #c9a0d4; }
+.settings-actions .close-btn:hover { background: rgba(212,165,255,.2); }
+.preset-name {
+  font-size: 10px; color: #d4b0cc; text-align: center; margin-top: 2px;
+}
 .loading { text-align: center; color: #c9a0d4; padding: 40px; font-size: 14px; }
 .error { text-align: center; color: #ff6b9d; padding: 20px; font-size: 13px; word-break: break-all; }
 .no-result { text-align: center; color: #d4b0cc; padding: 40px; font-size: 14px; }
@@ -285,6 +334,22 @@ body {
       <button class="mode-btn active" data-mode="list" onclick="setPlayMode('list')">🔁 顺序</button>
       <button class="mode-btn" data-mode="loop" onclick="setPlayMode('loop')">🔂 单曲</button>
       <button class="mode-btn" data-mode="random" onclick="setPlayMode('random')">🔀 随机</button>
+    </div>
+  </div>
+
+  <button class="settings-btn" id="settingsBtn" onclick="toggleSettings()" title="自定义背景">⚙</button>
+  <div class="settings-panel" id="settingsPanel">
+    <h3>🎨 自定义背景</h3>
+    <label>上传图片</label>
+    <div class="upload-area">
+      <input type="file" id="bgFileInput" accept="image/*" onchange="handleBgUpload(this)">
+      <label class="upload-btn" for="bgFileInput">📁 选择图片</label>
+    </div>
+    <label>预设背景</label>
+    <div class="presets" id="presets"></div>
+    <div class="settings-actions">
+      <button class="reset-btn" onclick="resetBg()">🔄 恢复默认</button>
+      <button class="close-btn" onclick="toggleSettings()">✕ 关闭</button>
     </div>
   </div>
 
@@ -776,6 +841,87 @@ function formatTime(s) {
   var sec = Math.floor(s % 60);
   return (m < 10 ? '0' : '') + m + ':' + (sec < 10 ? '0' : '') + sec;
 }
+
+var BG_PRESETS = [
+  { name: '粉紫渐变', bg: 'linear-gradient(135deg, #ffe4ec 0%, #f8e8ff 40%, #e8f4ff 100%)' },
+  { name: '樱花粉', bg: 'linear-gradient(135deg, #fff0f5 0%, #ffe4ec 50%, #ffd6e0 100%)' },
+  { name: '薰衣草', bg: 'linear-gradient(135deg, #f0e6ff 0%, #e8d8ff 50%, #f0e6ff 100%)' },
+  { name: '天空蓝', bg: 'linear-gradient(135deg, #e8f4ff 0%, #d0ecff 50%, #e8f4ff 100%)' },
+  { name: '薄荷', bg: 'linear-gradient(135deg, #e8fff0 0%, #d0ffe8 50%, #e8fff0 100%)' },
+  { name: '暮色', bg: 'linear-gradient(135deg, #2d1b4e 0%, #1a1a2e 50%, #16213e 100%)' },
+];
+
+function toggleSettings() {
+  document.getElementById('settingsPanel').classList.toggle('open');
+  renderPresets();
+}
+
+function renderPresets() {
+  var el = document.getElementById('presets');
+  var saved = getBg();
+  var html = '';
+  for (var i = 0; i < BG_PRESETS.length; i++) {
+    var active = saved === BG_PRESETS[i].bg ? ' active' : '';
+    html += '<div class="preset-wrap"><div class="preset-swatch' + active + '" style="background:' + BG_PRESETS[i].bg + '" onclick="applyBg(\'' + BG_PRESETS[i].bg.replace(/'/g, "\\'") + '\')"></div><div class="preset-name">' + BG_PRESETS[i].name + '</div></div>';
+  }
+  el.innerHTML = html;
+}
+
+function getBg() {
+  try { return localStorage.getItem('moe_bg') || ''; } catch(e) { return ''; }
+}
+
+function applyBg(bg) {
+  if (bg) {
+    document.body.style.background = bg;
+    document.body.style.backgroundSize = 'cover';
+    document.body.style.backgroundAttachment = 'fixed';
+    try { localStorage.setItem('moe_bg', bg); } catch(e) {}
+  }
+  renderPresets();
+}
+
+function handleBgUpload(input) {
+  var file = input.files && input.files[0];
+  if (!file) return;
+  var reader = new FileReader();
+  reader.onload = function(e) {
+    var url = e.target.result;
+    document.body.style.background = 'url(' + url + ') center/cover fixed';
+    try { localStorage.setItem('moe_bg', url); } catch(e) {}
+    renderPresets();
+    showErr('背景已更新');
+  };
+  reader.readAsDataURL(file);
+  input.value = '';
+}
+
+function resetBg() {
+  document.body.style.background = '';
+  document.body.style.backgroundSize = '';
+  document.body.style.backgroundAttachment = '';
+  try { localStorage.removeItem('moe_bg'); } catch(e) {}
+  renderPresets();
+  showErr('已恢复默认背景');
+}
+
+// Restore saved background on load
+(function() {
+  var savedBg = getBg();
+  if (savedBg) {
+    document.body.style.background = savedBg.indexOf('url') === 0 ? savedBg + ' center/cover fixed' : savedBg;
+    document.body.style.backgroundSize = 'cover';
+    document.body.style.backgroundAttachment = 'fixed';
+  }
+  // Click outside closes settings
+  document.addEventListener('click', function(e) {
+    var p = document.getElementById('settingsPanel');
+    var b = document.getElementById('settingsBtn');
+    if (p.classList.contains('open') && !p.contains(e.target) && e.target !== b && !b.contains(e.target)) {
+      p.classList.remove('open');
+    }
+  });
+})();
 
 // Restore saved state
 (function() {
